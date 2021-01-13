@@ -38,7 +38,6 @@ public class UIManager : MonoBehaviour
             if (musicManager.pause) playPauseImage.sprite = playPause[0];
             else playPauseImage.sprite = playPause[1];
 
-            playlistMusicDict[musicManager.audioManager.audioSource.clip].transform.GetChild(0).GetComponent<Image>().enabled = true;
             foreach (AudioClip clip in musicManager.musics)
             {
                 if (clip == musicManager.audioManager.audioSource.clip)
@@ -79,7 +78,7 @@ public class UIManager : MonoBehaviour
         GameObject playlistMusic = Instantiate(playlistMusicPrefab, playlistContent.transform);
 
         if (playlistMusicDict.Count > 4)
-            playlistContent.GetComponent<RectTransform>().sizeDelta += new Vector2(0, 50);
+            playlistContent.GetComponent<RectTransform>().sizeDelta += new Vector2(0, 40);
 
         Text[] texts = playlistMusic.GetComponentsInChildren<Text>();
         texts[0].text = clip.name;
@@ -99,10 +98,13 @@ public class UIManager : MonoBehaviour
     {
         int index = musicManager.musics.IndexOf(clip);
         MovePlaylistMusic(index);
+
         Destroy(playlistMusicDict[clip]);
         musicManager.musics.Remove(clip);
         playlistMusicDict.Remove(clip);
+
         if (index <= musicManager.musicIndex) musicManager.musicIndex--;
+
         if (musicManager.audioManager.audioSource.clip == clip)
         {
             musicManager.audioManager.audioSource.clip = null;
@@ -113,7 +115,8 @@ public class UIManager : MonoBehaviour
     void MovePlaylistMusic(int index)
     {
         if (playlistMusicDict.Count > 4)
-            playlistContent.GetComponent<RectTransform>().sizeDelta -= new Vector2(0, 50);
+            playlistContent.GetComponent<RectTransform>().sizeDelta -= new Vector2(0, 40);
+
         foreach (AudioClip clip in musicManager.musics.GetRange(index, musicManager.musics.Count - index))
         {
             if (playlistMusicDict.ContainsKey(clip))
