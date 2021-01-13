@@ -36,6 +36,19 @@ public class MusicManager : MonoBehaviour
 
     }
 
+    public void PlayQueued(AudioClip clip)
+    {
+        int index = musics.IndexOf(clip);
+        if (index > -1)
+        {
+            if (musicIndex != index)
+            {
+                musicIndex = index;
+                audioManager.Play(musics[musicIndex]);
+            }
+        }
+    }
+
     public void PlayNext()
     {
         if (musics.Count > 0)
