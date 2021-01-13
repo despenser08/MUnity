@@ -38,7 +38,8 @@ public class UIManager : MonoBehaviour
 
             if (musicManager.pause) playPauseImage.sprite = playPause[0];
             else playPauseImage.sprite = playPause[1];
-        } else
+        }
+        else
         {
             title.text = "Nothing to play";
             duration.text = "0:00 / 0:00";
@@ -52,7 +53,10 @@ public class UIManager : MonoBehaviour
     string FloatToTime(float time)
     {
         TimeSpan t = TimeSpan.FromSeconds(time);
-        return string.Format("{0:D1}:{1:D2}", t.Minutes, t.Seconds);
+        if (t.Hours == 0)
+            return string.Format("{0:D1}:{1:D2}", t.Minutes, t.Seconds);
+        else if (t.Days == 0) return string.Format("{0:D1}:{0:D2}:{1:D3}", t.Hours, t.Minutes, t.Seconds);
+        else return string.Format("{0:D1}{0:D2}:{0:D3}:{1:D4}", t.Days, t.Hours, t.Minutes, t.Seconds);
     }
 
     public void SetDuration(Slider slider)
