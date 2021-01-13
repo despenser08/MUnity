@@ -97,10 +97,12 @@ public class UIManager : MonoBehaviour
     void RemoveMusic(AudioClip clip)
     {
         int index = musicManager.musics.IndexOf(clip);
-        MovePlaylistMusic(index);
 
+        MovePlaylistMusic(index);
         Destroy(playlistMusicDict[clip]);
+
         musicManager.musics.Remove(clip);
+        musicManager.musicPathList.RemoveAt(index);
         playlistMusicDict.Remove(clip);
 
         if (index <= musicManager.musicIndex) musicManager.musicIndex--;

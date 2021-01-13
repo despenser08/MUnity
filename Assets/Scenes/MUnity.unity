@@ -1228,7 +1228,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioManager: {fileID: 79127372}
+  addMusic: {fileID: 1811392600}
   musics: []
+  musicPathList: []
   musicIndex: 0
   pause: 0
   volume: 100

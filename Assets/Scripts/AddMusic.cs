@@ -9,16 +9,16 @@ public class AddMusic : MonoBehaviour
 {
     public MusicManager musicManager;
     public UIManager UIManager;
-    private List<string> supportedFormats = new List<string> { ".mp3", ".ogg", ".wav", ".aiff", ".aif", ".mod", ".it", ".s3m", ".xm" };
+    private readonly List<string> supportedFormats = new List<string> { ".mp3", ".ogg", ".wav", ".aiff", ".aif", ".mod", ".it", ".s3m", ".xm" };
 
     public void FileSelect()
     {
-        string path = EditorUtility.OpenFilePanel("Select a Music", "", string.Join(", ", supportedFormats.ConvertAll(new System.Converter<string, string>(RemoveDot))));
+        string path = EditorUtility.OpenFilePanel("Select a Music", "", string.Join(", ", supportedFormats.ConvertAll(new System.Converter<string, string>(RemoveFirstChar))));
 
         if (path != null && path != "")
         {
             FileInfo fileInfo = new FileInfo(path);
-            if (supportedFormats.Contains(fileInfo.Extension))
+            if (fileInfo.Exists && supportedFormats.Contains(fileInfo.Extension))
                 LoadSong(fileInfo);
             else
             {
@@ -28,7 +28,7 @@ public class AddMusic : MonoBehaviour
         }
     }
 
-    private string RemoveDot(string format) => format.Substring(1);
+    private string RemoveFirstChar(string format) => format.Substring(1);
 
     public void LoadSong(FileInfo fileInfo) => StartCoroutine(LoadSongCoroutine(fileInfo));
 
@@ -45,13 +45,14 @@ public class AddMusic : MonoBehaviour
                 clip.name = fileInfo.Name.Replace(fileInfo.Extension, "");
 
                 musicManager.musics.Add(clip);
+                musicManager.musicPathList.Add(fileInfo.FullName);
                 UIManager.AddMusic(clip);
                 if (musicManager.musics.Count == 1) musicManager.PlayNext();
             }
         }
         else
         {
-            Debug.Log(audioFile.error);
+            Debug.LogError(audioFile.error);
             bool reselect = EditorUtility.DisplayDialog("Error", "An error has occurred. Please try again.", "Reselect", "Cancel");
             if (reselect) FileSelect();
         }
