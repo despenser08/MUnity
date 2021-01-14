@@ -60,4 +60,5 @@ crashlytics-build.properties
 
 # Music Status
 status.json
+status.json.meta
 

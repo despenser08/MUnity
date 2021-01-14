@@ -8,7 +8,7 @@ Pull Requests and Issues are always welcome!
 
 ### How to use MUnity
 
-#### 1. Download `Unity 2019.4.17f1` (recommended version).
+#### 1. Download `Unity 2019.4.18f1` (recommended version).
 #### 2. Download the entire project.
 #### 3. Add a project from Unity Hub or Unity and enter the project.
 #### 4. In the `Project` panel, double-click the `MUnity` scene in the 'Scenes' folder.

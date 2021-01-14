@@ -9,6 +9,7 @@ public class UIManager : MonoBehaviour
     public MusicManager musicManager;
     public Text title;
     public Text duration;
+    public GameObject loadingScreen;
     public Slider durationBar;
     public Image playPauseImage;
     public Sprite[] playPause;
@@ -125,5 +126,7 @@ public class UIManager : MonoBehaviour
                 playlistMusicDict[clip].transform.localPosition += new Vector3(0, 40);
         }
     }
+
+    public void LoadingScreen(bool enable) => loadingScreen.SetActive(enable);
 
 }

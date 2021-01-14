@@ -8,7 +8,6 @@ using UnityEngine.Networking;
 public class AddMusic : MonoBehaviour
 {
     public MusicManager musicManager;
-    public UIManager UIManager;
     private readonly List<string> supportedFormats = new List<string> { ".mp3", ".ogg", ".wav", ".aiff", ".aif", ".mod", ".it", ".s3m", ".xm" };
 
     public void FileSelect()
@@ -34,6 +33,8 @@ public class AddMusic : MonoBehaviour
 
     IEnumerator LoadSongCoroutine(FileInfo fileInfo)
     {
+        musicManager.UIManager.LoadingScreen(true);
+
         UnityWebRequest audioFile = UnityWebRequestMultimedia.GetAudioClip("file://" + fileInfo.FullName, AudioType.UNKNOWN);
         yield return audioFile.SendWebRequest();
 
@@ -46,7 +47,7 @@ public class AddMusic : MonoBehaviour
 
                 musicManager.musics.Add(clip);
                 musicManager.musicPathList.Add(fileInfo.FullName);
-                UIManager.AddMusic(clip);
+                musicManager.UIManager.AddMusic(clip);
                 if (musicManager.musics.Count == 1) musicManager.PlayNext();
             }
         }
@@ -56,5 +57,7 @@ public class AddMusic : MonoBehaviour
             bool reselect = EditorUtility.DisplayDialog("Error", "An error has occurred. Please try again.", "Reselect", "Cancel");
             if (reselect) FileSelect();
         }
+
+        musicManager.UIManager.LoadingScreen(false);
     }
 }

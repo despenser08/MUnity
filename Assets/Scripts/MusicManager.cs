@@ -7,6 +7,7 @@ public class MusicManager : MonoBehaviour
 {
 
     public AudioManager audioManager;
+    public UIManager UIManager;
     public AddMusic addMusic;
     public List<AudioClip> musics;
     public List<string> musicPathList = new List<string>();
@@ -46,6 +47,24 @@ public class MusicManager : MonoBehaviour
             Invoke(nameof(PlayNext), interval);
         }
 
+        Save();
+    }
+
+    void FixedUpdate()
+    {
+        if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            if (volume <= 90) volume += 10;
+            else volume = 100;
+        }
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            if (volume >= 10) volume -= 10;
+            else volume = 0;
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow)) audioManager.audioSource.time += 5;
+        else if (Input.GetKeyDown(KeyCode.LeftArrow)) audioManager.audioSource.time -= 5;
+        else if (Input.GetKeyDown(KeyCode.Space)) Pause();
     }
 
     void OnApplicationQuit()
@@ -147,24 +166,34 @@ public class MusicManager : MonoBehaviour
 
         if (parsed != null)
         {
+            UIManager.LoadingScreen(true);
+            yield return new WaitUntil(() => UIManager.loadingScreen.activeSelf);
+
+            volume = parsed.volume;
+            yield return new WaitUntil(() => volume == parsed.volume);
+
             foreach (string audioPath in parsed.musicPaths)
             {
                 FileInfo info = new FileInfo(audioPath);
                 if (info.Exists)
                     addMusic.LoadSong(info);
                 else parsed.musicPaths.Remove(audioPath);
-            };
-
+            }
             yield return new WaitUntil(() => parsed.musicPaths.Count <= musics.Count);
 
-            PlayIndex(parsed.musicIndex);
-            audioManager.audioSource.time = parsed.duration;
             pause = parsed.pause;
-            volume = parsed.volume;
-            loop = parsed.loop;
             pitch = parsed.pitch;
+            loop = parsed.loop;
             interval = parsed.interval;
+
+            PlayIndex(parsed.musicIndex);
+
+            audioManager.audioSource.time = parsed.duration;
+            yield return new WaitUntil(() => audioManager.audioSource.time == parsed.duration);
+
+            UIManager.LoadingScreen(false);
         }
+
     }
 
     class Status
