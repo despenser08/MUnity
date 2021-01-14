@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class MusicManager : MonoBehaviour
 {
-
     public AudioManager audioManager;
     public UIManager UIManager;
     public AddMusic addMusic;
@@ -14,28 +13,27 @@ public class MusicManager : MonoBehaviour
     public int musicIndex = 0;
 
     public bool pause = true;
-    [Range(0, 100)]
-    public float volume = 100f;
+    [Range(0, 100)] public float volume = 100f;
     public bool loop = true;
     public float pitch = 1f;
 
     public float interval = 2f;
 
-    private static string SAVE_FOLDER;
-    private static readonly string SAVE_FILE = "/status.json";
+    private static string saveFolder;
+    private const string SaveFile = "/status.json";
 
-    void Start()
+    private void Start()
     {
-        SAVE_FOLDER = Application.dataPath;
-        if (!Directory.Exists(SAVE_FOLDER)) Directory.CreateDirectory(SAVE_FOLDER);
+        saveFolder = Application.dataPath;
+        if (!Directory.Exists(saveFolder)) Directory.CreateDirectory(saveFolder);
 
-        if (File.Exists(SAVE_FOLDER + SAVE_FILE)) StartCoroutine(LoadCoroutine());
+        if (File.Exists(saveFolder + SaveFile)) StartCoroutine(LoadCoroutine());
 
         if (musics.Count > 0)
             audioManager.Play(musics[musicIndex]);
     }
 
-    void Update()
+    private void Update()
     {
         audioManager.Pause(pause);
         audioManager.Volume(volume / 100f);
@@ -50,7 +48,7 @@ public class MusicManager : MonoBehaviour
         Save();
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
@@ -67,50 +65,45 @@ public class MusicManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Space)) Pause();
     }
 
-    void OnApplicationQuit()
+    private void OnApplicationQuit()
     {
         Save();
     }
 
     public void PlayQueued(AudioClip clip)
     {
-        int index = musics.IndexOf(clip);
-        if (index > -1)
-        {
-            if (musicIndex != index)
-            {
-                musicIndex = index;
-                audioManager.Play(musics[musicIndex]);
-            }
-        }
+        var index = musics.IndexOf(clip);
+
+        if (index <= -1) return;
+        if (musicIndex == index) return;
+
+        musicIndex = index;
+        audioManager.Play(musics[musicIndex]);
     }
 
     public void PlayIndex(int index)
     {
-        if (index < musics.Count && index > -1)
-        {
-            if (musicIndex != index)
-            {
-                musicIndex = index;
-                audioManager.Play(musics[musicIndex]);
-            }
-        }
+        if (index >= musics.Count || index <= -1) return;
+
+        if (musicIndex == index) return;
+
+        musicIndex = index;
+        audioManager.Play(musics[musicIndex]);
     }
 
     public void PlayNext()
     {
-        if (musics.Count > 0)
-        {
-            if (++musicIndex < musics.Count)
-                audioManager.Play(musics[musicIndex]);
-            else if (loop)
-            {
-                musicIndex = 0;
-                audioManager.Play(musics[musicIndex]);
-            }
+        if (musics.Count <= 0) return;
 
-            pause = false;
+        if (++musicIndex < musics.Count)
+            audioManager.Play(musics[musicIndex]);
+        else if (loop)
+        {
+            musicIndex = 0;
+            audioManager.Play(musics[musicIndex]);
         }
+
+        pause = false;
     }
 
     public void SkipPrevious()
@@ -121,19 +114,18 @@ public class MusicManager : MonoBehaviour
 
     public void PlayPrevious()
     {
-        if (musics.Count > 0)
-        {
-            if (--musicIndex < 0) musicIndex = musics.Count - 1;
-            if (musicIndex < musics.Count)
-                audioManager.Play(musics[musicIndex]);
-            else if (loop)
-            {
-                musicIndex = 0;
-                audioManager.Play(musics[musicIndex]);
-            }
+        if (musics.Count <= 0) return;
 
-            pause = false;
+        if (--musicIndex < 0) musicIndex = musics.Count - 1;
+        if (musicIndex < musics.Count)
+            audioManager.Play(musics[musicIndex]);
+        else if (loop)
+        {
+            musicIndex = 0;
+            audioManager.Play(musics[musicIndex]);
         }
+
+        pause = false;
     }
 
     public void Pause()
@@ -142,9 +134,9 @@ public class MusicManager : MonoBehaviour
             pause = !pause;
     }
 
-    void Save()
+    private void Save()
     {
-        Status save = new Status
+        var save = new Status
         {
             musicIndex = musicIndex,
             duration = audioManager.audioSource.time,
@@ -156,47 +148,46 @@ public class MusicManager : MonoBehaviour
             musicPaths = musicPathList
         };
 
-        File.WriteAllText(SAVE_FOLDER + SAVE_FILE, JsonUtility.ToJson(save));
+        File.WriteAllText(saveFolder + SaveFile, JsonUtility.ToJson(save));
     }
 
-    IEnumerator LoadCoroutine()
+    private IEnumerator LoadCoroutine()
     {
-        string save = File.ReadAllText(SAVE_FOLDER + SAVE_FILE);
-        Status parsed = JsonUtility.FromJson<Status>(save);
+        var save = File.ReadAllText(saveFolder + SaveFile);
+        var parsed = JsonUtility.FromJson<Status>(save);
 
-        if (parsed != null)
+        if (parsed == null) yield break;
+
+        UIManager.LoadingScreen(true);
+        yield return new WaitUntil(() => UIManager.loadingScreen.activeSelf);
+
+        volume = parsed.volume;
+        yield return new WaitUntil(() => volume == parsed.volume);
+
+        foreach (var audioPath in parsed.musicPaths)
         {
-            UIManager.LoadingScreen(true);
-            yield return new WaitUntil(() => UIManager.loadingScreen.activeSelf);
-
-            volume = parsed.volume;
-            yield return new WaitUntil(() => volume == parsed.volume);
-
-            foreach (string audioPath in parsed.musicPaths)
-            {
-                FileInfo info = new FileInfo(audioPath);
-                if (info.Exists)
-                    addMusic.LoadSong(info);
-                else parsed.musicPaths.Remove(audioPath);
-            }
-            yield return new WaitUntil(() => parsed.musicPaths.Count <= musics.Count);
-
-            pause = parsed.pause;
-            pitch = parsed.pitch;
-            loop = parsed.loop;
-            interval = parsed.interval;
-
-            PlayIndex(parsed.musicIndex);
-
-            audioManager.audioSource.time = parsed.duration;
-            yield return new WaitUntil(() => audioManager.audioSource.time == parsed.duration);
-
-            UIManager.LoadingScreen(false);
+            var info = new FileInfo(audioPath);
+            if (info.Exists)
+                addMusic.LoadSong(info);
+            else parsed.musicPaths.Remove(audioPath);
         }
 
+        yield return new WaitUntil(() => parsed.musicPaths.Count <= musics.Count);
+
+        pause = parsed.pause;
+        pitch = parsed.pitch;
+        loop = parsed.loop;
+        interval = parsed.interval;
+
+        PlayIndex(parsed.musicIndex);
+
+        audioManager.audioSource.time = parsed.duration;
+        yield return new WaitUntil(() => audioManager.audioSource.time == parsed.duration);
+
+        UIManager.LoadingScreen(false);
     }
 
-    class Status
+    private class Status
     {
         public int musicIndex;
         public float duration;
@@ -207,5 +198,4 @@ public class MusicManager : MonoBehaviour
         public float interval;
         public List<string> musicPaths;
     }
-
 }

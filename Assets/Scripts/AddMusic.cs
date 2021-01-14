@@ -8,39 +8,47 @@ using UnityEngine.Networking;
 public class AddMusic : MonoBehaviour
 {
     public MusicManager musicManager;
-    private readonly List<string> supportedFormats = new List<string> { ".mp3", ".ogg", ".wav", ".aiff", ".aif", ".mod", ".it", ".s3m", ".xm" };
+
+    private readonly List<string> supportedFormats = new List<string>
+        {".mp3", ".ogg", ".wav", ".aiff", ".aif", ".mod", ".it", ".s3m", ".xm"};
 
     public void FileSelect()
     {
-        string path = EditorUtility.OpenFilePanel("Select a Music", "", string.Join(", ", supportedFormats.ConvertAll(new System.Converter<string, string>(RemoveFirstChar))));
-
-        if (path != null && path != "")
+        while (true)
         {
-            FileInfo fileInfo = new FileInfo(path);
+            var path = EditorUtility.OpenFilePanel("Select a Music", "",
+                string.Join(", ", supportedFormats.ConvertAll(RemoveFirstChar)));
+
+            if (string.IsNullOrEmpty(path)) return;
+            var fileInfo = new FileInfo(path);
             if (fileInfo.Exists && supportedFormats.Contains(fileInfo.Extension))
                 LoadSong(fileInfo);
             else
             {
-                bool reselect = EditorUtility.DisplayDialog("Error", "Unsupported file type.\nSupported file types: " + string.Join(", ", supportedFormats), "Reselect", "Cancel");
-                if (reselect) FileSelect();
+                var reselect = EditorUtility.DisplayDialog("Error",
+                    "Unsupported file type.\nSupported file types: " + string.Join(", ", supportedFormats), "Reselect",
+                    "Cancel");
+                if (reselect) continue;
             }
+
+            break;
         }
     }
 
-    private string RemoveFirstChar(string format) => format.Substring(1);
+    private static string RemoveFirstChar(string format) => format.Substring(1);
 
     public void LoadSong(FileInfo fileInfo) => StartCoroutine(LoadSongCoroutine(fileInfo));
 
-    IEnumerator LoadSongCoroutine(FileInfo fileInfo)
+    private IEnumerator LoadSongCoroutine(FileInfo fileInfo)
     {
         musicManager.UIManager.LoadingScreen(true);
 
-        UnityWebRequest audioFile = UnityWebRequestMultimedia.GetAudioClip("file://" + fileInfo.FullName, AudioType.UNKNOWN);
+        var audioFile = UnityWebRequestMultimedia.GetAudioClip("file://" + fileInfo.FullName, AudioType.UNKNOWN);
         yield return audioFile.SendWebRequest();
 
         if (!audioFile.isNetworkError || !audioFile.isHttpError)
         {
-            AudioClip clip = DownloadHandlerAudioClip.GetContent(audioFile);
+            var clip = DownloadHandlerAudioClip.GetContent(audioFile);
             if (clip)
             {
                 clip.name = fileInfo.Name.Replace(fileInfo.Extension, "");
@@ -54,7 +62,8 @@ public class AddMusic : MonoBehaviour
         else
         {
             Debug.LogError(audioFile.error);
-            bool reselect = EditorUtility.DisplayDialog("Error", "An error has occurred. Please try again.", "Reselect", "Cancel");
+            var reselect = EditorUtility.DisplayDialog("Error", "An error has occurred. Please try again.", "Reselect",
+                "Cancel");
             if (reselect) FileSelect();
         }
 

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-
     public MusicManager musicManager;
     public Text title;
     public Text duration;
@@ -16,35 +16,32 @@ public class UIManager : MonoBehaviour
     public GameObject playlistContent;
     public GameObject playlistMusicPrefab;
     public Camera mainCamera;
-    public bool rainbow = false;
+    public bool rainbow;
 
-    private float nowDuration = 0f;
-    private float fullDuration = 0f;
+    private float nowDuration;
+    private float fullDuration;
 
-    private Dictionary<AudioClip, GameObject> playlistMusicDict = new Dictionary<AudioClip, GameObject>();
+    private readonly Dictionary<AudioClip, GameObject> playlistMusicDict = new Dictionary<AudioClip, GameObject>();
 
-    void Update()
+    private void Update()
     {
         if (musicManager.audioManager.audioSource.clip)
         {
             nowDuration = musicManager.audioManager.audioSource.time;
-            fullDuration = musicManager.audioManager.audioSource.clip.length;
+            var playingClip = musicManager.audioManager.audioSource.clip;
+            fullDuration = playingClip.length;
 
-            title.text = musicManager.audioManager.audioSource.clip.name;
+            title.text = playingClip.name;
             durationBar.maxValue = fullDuration;
             durationBar.value = nowDuration;
 
             duration.text = FloatToTime(nowDuration) + " / " + FloatToTime(fullDuration);
 
-            if (musicManager.pause) playPauseImage.sprite = playPause[0];
-            else playPauseImage.sprite = playPause[1];
+            playPauseImage.sprite = musicManager.pause ? playPause[0] : playPause[1];
 
-            foreach (AudioClip clip in musicManager.musics)
-            {
-                if (clip == musicManager.audioManager.audioSource.clip)
-                    playlistMusicDict[clip].GetComponentInChildren<Image>().enabled = true;
-                else playlistMusicDict[clip].GetComponentInChildren<Image>().enabled = false;
-            }
+            foreach (var clip in musicManager.musics)
+                playlistMusicDict[clip].GetComponentInChildren<Image>().enabled =
+                    clip == musicManager.audioManager.audioSource.clip;
         }
         else
         {
@@ -58,34 +55,37 @@ public class UIManager : MonoBehaviour
         else mainCamera.backgroundColor = Color.black;
     }
 
-    string FloatToTime(float time)
+    private static string FloatToTime(float time)
     {
-        TimeSpan t = TimeSpan.FromSeconds(time);
+        var t = TimeSpan.FromSeconds(time);
         if (t.Hours == 0)
-            return string.Format("{0:D1}:{1:D2}", t.Minutes, t.Seconds);
-        else if (t.Days == 0) return string.Format("{0:D1}:{0:D2}:{1:D3}", t.Hours, t.Minutes, t.Seconds);
-        else return string.Format("{0:D1}:{0:D2}:{0:D3}:{1:D4}", t.Days, t.Hours, t.Minutes, t.Seconds);
+            return $"{t.Minutes:D1}:{t.Seconds:D2}";
+
+        return t.Days == 0
+            ? $"{t.Hours:D1}:{t.Minutes:D1}:{t.Seconds:D2}"
+            : $"{t.Days:D1}:{t.Hours:D1}:{t.Minutes:D1}:{t.Seconds:D2}";
     }
 
     public void SetDuration(Slider slider)
     {
-        if (musicManager.audioManager.audioSource.clip)
-            if (musicManager.audioManager.audioSource.clip.length > slider.value)
-                musicManager.audioManager.audioSource.time = slider.value;
+        if (!musicManager.audioManager.audioSource.clip) return;
+
+        if (musicManager.audioManager.audioSource.clip.length > slider.value)
+            musicManager.audioManager.audioSource.time = slider.value;
     }
 
     public void AddMusic(AudioClip clip)
     {
-        GameObject playlistMusic = Instantiate(playlistMusicPrefab, playlistContent.transform);
+        var playlistMusic = Instantiate(playlistMusicPrefab, playlistContent.transform);
 
         if (playlistMusicDict.Count > 4)
             playlistContent.GetComponent<RectTransform>().sizeDelta += new Vector2(0, 40);
 
-        Text[] texts = playlistMusic.GetComponentsInChildren<Text>();
+        var texts = playlistMusic.GetComponentsInChildren<Text>();
         texts[0].text = clip.name;
         texts[1].text = FloatToTime(clip.length);
 
-        Button[] buttons = playlistMusic.GetComponentsInChildren<Button>();
+        var buttons = playlistMusic.GetComponentsInChildren<Button>();
         buttons[0].onClick.AddListener(() => musicManager.PlayQueued(clip));
         buttons[1].onClick.AddListener(() => RemoveMusic(clip));
 
@@ -95,9 +95,9 @@ public class UIManager : MonoBehaviour
         playlistMusicDict.Add(clip, playlistMusic);
     }
 
-    void RemoveMusic(AudioClip clip)
+    private void RemoveMusic(AudioClip clip)
     {
-        int index = musicManager.musics.IndexOf(clip);
+        var index = musicManager.musics.IndexOf(clip);
 
         MovePlaylistMusic(index);
         Destroy(playlistMusicDict[clip]);
@@ -108,25 +108,21 @@ public class UIManager : MonoBehaviour
 
         if (index <= musicManager.musicIndex) musicManager.musicIndex--;
 
-        if (musicManager.audioManager.audioSource.clip == clip)
-        {
-            musicManager.audioManager.audioSource.clip = null;
-            musicManager.PlayNext();
-        }
+        if (musicManager.audioManager.audioSource.clip != clip) return;
+
+        musicManager.audioManager.audioSource.clip = null;
+        musicManager.PlayNext();
     }
 
-    void MovePlaylistMusic(int index)
+    private void MovePlaylistMusic(int index)
     {
         if (playlistMusicDict.Count > 4)
             playlistContent.GetComponent<RectTransform>().sizeDelta -= new Vector2(0, 40);
 
-        foreach (AudioClip clip in musicManager.musics.GetRange(index, musicManager.musics.Count - index))
-        {
-            if (playlistMusicDict.ContainsKey(clip))
-                playlistMusicDict[clip].transform.localPosition += new Vector3(0, 40);
-        }
+        foreach (var clip in musicManager.musics.GetRange(index, musicManager.musics.Count - index)
+            .Where(clip => playlistMusicDict.ContainsKey(clip)))
+            playlistMusicDict[clip].transform.localPosition += new Vector3(0, 40);
     }
 
     public void LoadingScreen(bool enable) => loadingScreen.SetActive(enable);
-
 }
