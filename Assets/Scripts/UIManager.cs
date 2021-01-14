@@ -16,6 +16,7 @@ public class UIManager : MonoBehaviour
     public Image volumeMuteImage;
     public Sprite[] playPause;
     public Sprite[] volumeSprites;
+    public RectTransform cachedTransform;
     public GameObject volumePanel;
     public GameObject playlistContent;
     public GameObject playlistMusicPrefab;
@@ -85,6 +86,9 @@ public class UIManager : MonoBehaviour
         if (rainbow && !musicManager.pause)
             mainCamera.backgroundColor = Color.HSVToRGB(nowDuration / fullDuration, 1f, 1f);
         else mainCamera.backgroundColor = Color.black;
+
+        if (loadingScreen.activeSelf)
+            cachedTransform.Rotate(0, 0, 200 * Time.deltaTime);
     }
 
     private static string FloatToTime(float time)
