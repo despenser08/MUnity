@@ -12,16 +12,29 @@ public class UIManager : MonoBehaviour
     public GameObject loadingScreen;
     public Slider durationBar;
     public Image playPauseImage;
+    public Image volumeImage;
+    public Image volumeMuteImage;
     public Sprite[] playPause;
+    public Sprite[] volumeSprites;
+    public GameObject volumePanel;
     public GameObject playlistContent;
     public GameObject playlistMusicPrefab;
     public Camera mainCamera;
     public bool rainbow;
 
+    private Slider volumeBar;
     private float nowDuration;
     private float fullDuration;
 
     private readonly Dictionary<AudioClip, GameObject> playlistMusicDict = new Dictionary<AudioClip, GameObject>();
+
+    private void Start()
+    {
+        title.text = "Nothing to play";
+        duration.text = "0:00 / 0:00";
+        durationBar.value = 0;
+        volumeBar = volumePanel.GetComponentInChildren<Slider>();
+    }
 
     private void Update()
     {
@@ -38,6 +51,25 @@ public class UIManager : MonoBehaviour
             duration.text = FloatToTime(nowDuration) + " / " + FloatToTime(fullDuration);
 
             playPauseImage.sprite = musicManager.pause ? playPause[0] : playPause[1];
+
+            if (musicManager.volume >= 50)
+            {
+                volumeImage.sprite = volumeSprites[0];
+                volumeMuteImage.sprite = volumeSprites[2];
+            }
+            else if (musicManager.volume == 0)
+            {
+                volumeImage.sprite = volumeSprites[2];
+                volumeMuteImage.sprite = volumeSprites[3];
+            }
+            else
+            {
+                volumeMuteImage.sprite = volumeSprites[2];
+                volumeImage.sprite = volumeSprites[1];
+            }
+
+            if (volumePanel.activeSelf)
+                volumeBar.value = musicManager.volume;
 
             foreach (var clip in musicManager.musics)
                 playlistMusicDict[clip].GetComponentInChildren<Image>().enabled =
@@ -125,4 +157,30 @@ public class UIManager : MonoBehaviour
     }
 
     public void LoadingScreen(bool enable) => loadingScreen.SetActive(enable);
+
+    public void SetVolume(Slider slider)
+    {
+        musicManager.volume = slider.value;
+        ShowVolumeControl();
+    }
+
+    public void VolumeControl()
+    {
+        if (volumePanel.activeSelf)
+            HideVolumeControl();
+        else ShowVolumeControl();
+    }
+
+    public void ShowVolumeControl()
+    {
+        CancelInvoke(nameof(HideVolumeControl));
+        volumePanel.SetActive(true);
+        Invoke(nameof(HideVolumeControl), 5f);
+    }
+
+    private void HideVolumeControl()
+    {
+        CancelInvoke(nameof(HideVolumeControl));
+        volumePanel.SetActive(false);
+    }
 }

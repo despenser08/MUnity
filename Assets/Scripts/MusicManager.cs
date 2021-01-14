@@ -19,6 +19,7 @@ public class MusicManager : MonoBehaviour
 
     public float interval = 2f;
 
+    private float muteVolume = 0f;
     private static string saveFolder;
     private const string SaveFile = "/status.json";
 
@@ -54,14 +55,24 @@ public class MusicManager : MonoBehaviour
         {
             if (volume <= 90) volume += 10;
             else volume = 100;
+            UIManager.ShowVolumeControl();
         }
         else if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             if (volume >= 10) volume -= 10;
             else volume = 0;
+            UIManager.ShowVolumeControl();
         }
-        else if (Input.GetKeyDown(KeyCode.RightArrow)) audioManager.audioSource.time += 5;
-        else if (Input.GetKeyDown(KeyCode.LeftArrow)) audioManager.audioSource.time -= 5;
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            if (audioManager.audioSource.clip.length > audioManager.audioSource.time + 5)
+                audioManager.audioSource.time += 5;
+        }
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            if (0 < audioManager.audioSource.time - 5)
+                audioManager.audioSource.time -= 5;
+        }
         else if (Input.GetKeyDown(KeyCode.Space)) Pause();
     }
 
@@ -132,6 +143,24 @@ public class MusicManager : MonoBehaviour
     {
         if (audioManager.audioSource.clip)
             pause = !pause;
+    }
+
+    public void AddVolume(float volumeAdded)
+    {
+        if (volume + volumeAdded >= 0 && volume + volumeAdded <= 100)
+            volume += volumeAdded;
+        else if (volume + volumeAdded < 0) volume = 0;
+        else if (volume + volumeAdded > 100) volume = 100;
+    }
+
+    public void Mute()
+    {
+        if (volume != 0)
+        {
+            muteVolume = volume;
+            volume = 0;
+        }
+        else volume = muteVolume;
     }
 
     private void Save()
