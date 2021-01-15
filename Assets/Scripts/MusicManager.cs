@@ -57,23 +57,27 @@ public class MusicManager : MonoBehaviour
             else volume = 100;
             UIManager.ShowVolumeControl();
         }
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
+
+        if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             if (volume >= 10) volume -= 10;
             else volume = 0;
             UIManager.ShowVolumeControl();
         }
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
+
+        if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             if (audioManager.audioSource.clip.length > audioManager.audioSource.time + 5)
                 audioManager.audioSource.time += 5;
         }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             if (0 < audioManager.audioSource.time - 5)
                 audioManager.audioSource.time -= 5;
         }
-        else if (Input.GetKeyDown(KeyCode.Space)) Pause();
+
+        if (Input.GetKeyDown(KeyCode.Space)) Pause();
     }
 
     private void OnApplicationQuit()
