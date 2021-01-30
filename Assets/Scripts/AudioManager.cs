@@ -17,38 +17,17 @@ public class AudioManager : MonoBehaviour
         else audioSource.UnPause();
     }
 
-    public void Stop()
-    {
-        audioSource.Stop();
-    }
+    public void Stop() => audioSource.Stop();
 
-    public bool Loop(bool loop)
-    {
-        return audioSource.loop = loop;
-    }
+    public bool Loop(bool loop) => audioSource.loop = loop;
 
-    public bool Loop()
-    {
-        return audioSource.loop;
-    }
+    public bool Loop() => audioSource.loop;
 
-    public float Volume(float volume)
-    {
-        return audioSource.volume = volume;
-    }
+    public float Volume(float volume) => audioSource.volume = volume;
 
-    public float Volume()
-    {
-        return audioSource.volume;
-    }
+    public float Volume() => audioSource.volume;
 
-    public float Pitch(float pitch)
-    {
-        return audioSource.pitch = pitch;
-    }
+    public float Pitch(float pitch) => audioSource.pitch = pitch;
 
-    public float Pitch()
-    {
-        return audioSource.pitch;
-    }
+    public float Pitch() => audioSource.pitch;
 }

@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class MusicManager : MonoBehaviour
 {
     public AudioManager audioManager;
-    public UIManager UIManager;
+    public UIManager uiManager;
     public AddMusic addMusic;
     public List<AudioClip> musics;
     public List<string> musicPathList = new List<string>();
@@ -19,7 +20,7 @@ public class MusicManager : MonoBehaviour
 
     public float interval = 2f;
 
-    private float muteVolume = 0f;
+    private float muteVolume;
     private static string saveFolder;
     private const string SaveFile = "/status.json";
 
@@ -47,22 +48,19 @@ public class MusicManager : MonoBehaviour
         }
 
         Save();
-    }
-
-    private void FixedUpdate()
-    {
+        
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             if (volume <= 90) volume += 10;
             else volume = 100;
-            UIManager.ShowVolumeControl();
+            uiManager.ShowVolumeControl();
         }
 
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             if (volume >= 10) volume -= 10;
             else volume = 0;
-            UIManager.ShowVolumeControl();
+            uiManager.ShowVolumeControl();
         }
 
         if (Input.GetKeyDown(KeyCode.RightArrow))
@@ -181,7 +179,11 @@ public class MusicManager : MonoBehaviour
             musicPaths = musicPathList
         };
 
-        File.WriteAllText(saveFolder + SaveFile, JsonUtility.ToJson(save));
+        var load = File.ReadAllText(saveFolder + SaveFile);
+        var saveStr = JsonUtility.ToJson(save);
+
+        if (saveStr != load)
+            File.WriteAllText(saveFolder + SaveFile, saveStr);
     }
 
     private IEnumerator LoadCoroutine()
@@ -191,8 +193,8 @@ public class MusicManager : MonoBehaviour
 
         if (parsed == null) yield break;
 
-        UIManager.LoadingScreen(true);
-        yield return new WaitUntil(() => UIManager.loadingScreen.activeSelf);
+        uiManager.LoadingScreen(true);
+        yield return new WaitUntil(() => uiManager.loadingScreen.activeSelf);
 
         volume = parsed.volume;
         yield return new WaitUntil(() => volume == parsed.volume);
@@ -217,7 +219,7 @@ public class MusicManager : MonoBehaviour
         audioManager.audioSource.time = parsed.duration;
         yield return new WaitUntil(() => audioManager.audioSource.time == parsed.duration);
 
-        UIManager.LoadingScreen(false);
+        uiManager.LoadingScreen(false);
     }
 
     private class Status

@@ -41,7 +41,7 @@ public class AddMusic : MonoBehaviour
 
     private IEnumerator LoadSongCoroutine(FileInfo fileInfo)
     {
-        musicManager.UIManager.LoadingScreen(true);
+        musicManager.uiManager.LoadingScreen(true);
 
         var audioFile = UnityWebRequestMultimedia.GetAudioClip("file://" + fileInfo.FullName, AudioType.UNKNOWN);
         yield return audioFile.SendWebRequest();
@@ -55,7 +55,7 @@ public class AddMusic : MonoBehaviour
 
                 musicManager.musics.Add(clip);
                 musicManager.musicPathList.Add(fileInfo.FullName);
-                musicManager.UIManager.AddMusic(clip);
+                musicManager.uiManager.AddMusic(clip);
                 if (musicManager.musics.Count == 1) musicManager.PlayNext();
             }
         }
@@ -67,6 +67,6 @@ public class AddMusic : MonoBehaviour
             if (reselect) FileSelect();
         }
 
-        musicManager.UIManager.LoadingScreen(false);
+        musicManager.uiManager.LoadingScreen(false);
     }
 }

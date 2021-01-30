@@ -59,10 +59,7 @@ public class UIManager : MonoBehaviour
                 volumeMuteImage.sprite = volumeSprites[2];
             }
             else if (musicManager.volume == 0)
-            {
-                volumeImage.sprite = volumeSprites[2];
-                volumeMuteImage.sprite = volumeSprites[3];
-            }
+                volumeImage.sprite = volumeMuteImage.sprite = volumeSprites[3];
             else
             {
                 volumeMuteImage.sprite = volumeSprites[2];
