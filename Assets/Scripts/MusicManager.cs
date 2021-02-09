@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class MusicManager : MonoBehaviour
 {
@@ -19,10 +18,16 @@ public class MusicManager : MonoBehaviour
     public float pitch = 1f;
 
     public float interval = 2f;
+    public float pressInterval = 0.2f;
+    
+    public float volumePressed = 0.5f;
+    public float durationPressed = 0.1f;
 
     private float muteVolume;
     private static string saveFolder;
     private const string SaveFile = "/status.json";
+
+    private bool firstPressed = true;
 
     private void Start()
     {
@@ -30,6 +35,7 @@ public class MusicManager : MonoBehaviour
         if (!Directory.Exists(saveFolder)) Directory.CreateDirectory(saveFolder);
 
         if (File.Exists(saveFolder + SaveFile)) StartCoroutine(LoadCoroutine());
+        else File.Create(saveFolder + SaveFile);
 
         if (musics.Count > 0)
             audioManager.Play(musics[musicIndex]);
@@ -48,34 +54,141 @@ public class MusicManager : MonoBehaviour
         }
 
         Save();
+
+        KeyControl();
+    }
+
+    private void KeyControl()
+    {
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            if (firstPressed)
+                VolumeUp(10);
+            Invoke(nameof(VolumeUp), pressInterval);
+            firstPressed = false;
+        }
+
+        if (Input.GetKeyUp(KeyCode.UpArrow))
+        {
+            CancelInvoke(nameof(VolumeUp));
+            firstPressed = true;
+        }
+
+        if (Input.GetKey(KeyCode.DownArrow))
+        {
+            if (firstPressed)
+                VolumeDown(10);
+            Invoke(nameof(VolumeDown), pressInterval);
+            firstPressed = false;
+        }
+
+        if (Input.GetKeyUp(KeyCode.DownArrow))
+        {
+            CancelInvoke(nameof(VolumeDown));
+            firstPressed = true;
+        }
+
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            if (firstPressed)
+                DurationUp(5);
+            Invoke(nameof(DurationUp), pressInterval);
+            firstPressed = false;
+        }
+
+        if (Input.GetKeyUp(KeyCode.RightArrow))
+        {
+            CancelInvoke(nameof(DurationUp));
+            firstPressed = true;
+        }
+
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            if (firstPressed)
+                DurationDown(5);
+            Invoke(nameof(DurationDown), pressInterval);
+            firstPressed = false;
+        }
+
+        if (Input.GetKeyUp(KeyCode.LeftArrow))
+        {
+            CancelInvoke(nameof(DurationDown));
+            firstPressed = true;
+        }
         
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (Input.GetKey(KeyCode.Space))
         {
-            if (volume <= 90) volume += 10;
-            else volume = 100;
-            uiManager.ShowVolumeControl();
+            if (firstPressed)
+                Pause();
+            Invoke(nameof(Pause), pressInterval);
+            firstPressed = false;
         }
-
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        
+        if (Input.GetKeyUp(KeyCode.Space))
         {
-            if (volume >= 10) volume -= 10;
-            else volume = 0;
-            uiManager.ShowVolumeControl();
+            CancelInvoke(nameof(Pause));
+            firstPressed = true;
         }
+    }
 
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            if (audioManager.audioSource.clip.length > audioManager.audioSource.time + 5)
-                audioManager.audioSource.time += 5;
-        }
+    private void VolumeUp(int volumeAdded)
+    {
+        if (volume <= 100 - volumeAdded)
+            volume += volumeAdded;
+        else volume = 100;
+        uiManager.ShowVolumeControl();
+    }
 
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            if (0 < audioManager.audioSource.time - 5)
-                audioManager.audioSource.time -= 5;
-        }
+    private void VolumeUp()
+    {
+        if (volume <= 100 - volumePressed)
+            volume += volumePressed;
+        else volume = 100;
+        uiManager.ShowVolumeControl();
+    }
 
-        if (Input.GetKeyDown(KeyCode.Space)) Pause();
+    private void VolumeDown(int volumeSubtracted)
+    {
+        if (volume >= volumeSubtracted)
+            volume -= volumeSubtracted;
+        else volume = 0;
+        uiManager.ShowVolumeControl();
+    }
+
+    private void VolumeDown()
+    {
+        if (volume >= volumePressed)
+            volume -= volumePressed;
+        else volume = 0;
+        uiManager.ShowVolumeControl();
+    }
+
+    private void DurationUp(int durationAdded)
+    {
+        if (audioManager.audioSource.clip.length > audioManager.audioSource.time + durationAdded)
+            audioManager.audioSource.time += durationAdded;
+        else audioManager.audioSource.time = audioManager.audioSource.clip.length;
+    }
+    
+    private void DurationUp()
+    {
+        if (audioManager.audioSource.clip.length > audioManager.audioSource.time + durationPressed)
+            audioManager.audioSource.time += durationPressed;
+        else audioManager.audioSource.time = audioManager.audioSource.clip.length;
+    }
+
+    private void DurationDown(int durationSubtracted)
+    {
+        if (0 < audioManager.audioSource.time - durationSubtracted)
+            audioManager.audioSource.time -= durationSubtracted;
+        else audioManager.audioSource.time = 0;
+    }
+    
+    private void DurationDown()
+    {
+        if (0 < audioManager.audioSource.time - durationPressed)
+            audioManager.audioSource.time -= durationPressed;
+        else audioManager.audioSource.time = 0;
     }
 
     private void OnApplicationQuit()
@@ -176,6 +289,9 @@ public class MusicManager : MonoBehaviour
             loop = loop,
             pitch = pitch,
             interval = interval,
+            pressInterval = pressInterval,
+            volumePressed = volumePressed,
+            durationPressed = durationPressed,
             musicPaths = musicPathList
         };
 
@@ -214,6 +330,10 @@ public class MusicManager : MonoBehaviour
         loop = parsed.loop;
         interval = parsed.interval;
 
+        pressInterval = parsed.pressInterval;
+        volumePressed = parsed.volumePressed;
+        durationPressed = parsed.durationPressed;
+
         PlayIndex(parsed.musicIndex);
 
         audioManager.audioSource.time = parsed.duration;
@@ -231,6 +351,9 @@ public class MusicManager : MonoBehaviour
         public bool loop;
         public float pitch;
         public float interval;
+        public float pressInterval;
+        public float volumePressed;
+        public float durationPressed;
         public List<string> musicPaths;
     }
 }

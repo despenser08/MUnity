@@ -1,7 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using UnityEditor;
+using System.Windows.Forms;
+using SFB;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -10,32 +11,29 @@ public class AddMusic : MonoBehaviour
     public MusicManager musicManager;
 
     private readonly List<string> supportedFormats = new List<string>
-        {".mp3", ".ogg", ".wav", ".aiff", ".aif", ".mod", ".it", ".s3m", ".xm"};
+        {"mp3", "ogg", "wav", "aiff", "aif", "mod", "it", "s3m", "xm"};
 
     public void FileSelect()
     {
-        while (true)
-        {
-            var path = EditorUtility.OpenFilePanel("Select a Music", "",
-                string.Join(", ", supportedFormats.ConvertAll(RemoveFirstChar)));
+        var paths = StandaloneFileBrowser.OpenFilePanel("Select a Music", "",
+            new[] {new ExtensionFilter("Sound Files", supportedFormats.ToArray())}
+            , true);
 
-            if (string.IsNullOrEmpty(path)) return;
+        if (paths.Length < 1) return;
+
+        foreach (var path in paths)
+        {
             var fileInfo = new FileInfo(path);
-            if (fileInfo.Exists && supportedFormats.Contains(fileInfo.Extension))
+            if (fileInfo.Exists && supportedFormats.Contains(fileInfo.Extension.Substring(1)))
                 LoadSong(fileInfo);
             else
             {
-                var reselect = EditorUtility.DisplayDialog("Error",
-                    "Unsupported file type.\nSupported file types: " + string.Join(", ", supportedFormats), "Reselect",
-                    "Cancel");
-                if (reselect) continue;
+                MessageBox.Show(
+                    "Can't load \"" + path + "\"\nUnsupported file type.\nSupported file types: " +
+                    string.Join(", ", supportedFormats), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            break;
         }
     }
-
-    private static string RemoveFirstChar(string format) => format.Substring(1);
 
     public void LoadSong(FileInfo fileInfo) => StartCoroutine(LoadSongCoroutine(fileInfo));
 
@@ -62,9 +60,8 @@ public class AddMusic : MonoBehaviour
         else
         {
             Debug.LogError(audioFile.error);
-            var reselect = EditorUtility.DisplayDialog("Error", "An error has occurred. Please try again.", "Reselect",
-                "Cancel");
-            if (reselect) FileSelect();
+            MessageBox.Show("An error has occurred on loading \"" + fileInfo.FullName + "\". Please try again.",
+                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         musicManager.uiManager.LoadingScreen(false);

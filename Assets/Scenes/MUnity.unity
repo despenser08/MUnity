@@ -1637,6 +1637,9 @@ MonoBehaviour:
   loop: 1
   pitch: 1
   interval: 2
+  pressInterval: 0.2
+  volumePressed: 0.5
+  durationPressed: 0.1
 --- !u!4 &699626349
 Transform:
   m_ObjectHideFlags: 0

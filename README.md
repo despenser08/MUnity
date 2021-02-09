@@ -1,8 +1,6 @@
 # MUnity
 Unity Music Player
 
-### This music player is only available for `Unity Editor`. This project uses [`UnityEditor`](https://docs.unity3d.com/ScriptReference/UnityEditor.html) namespace.
-
 ##### This Unity project is my first Unity project. My Unity skills such as source code and GUI are not good enough, so the quality is poor.
 Pull Requests and Issues are always welcome!
 
