@@ -3,12 +3,14 @@
 public class AudioManager : MonoBehaviour
 {
     public AudioSource audioSource;
+    public DiscordController discordController;
 
     public void Play(AudioClip clip)
     {
         audioSource.clip = clip;
         audioSource.time = 0;
         audioSource.Play();
+        discordController.UpdateActivity("Listening " + clip.name);
     }
 
     public void Pause(bool pause)

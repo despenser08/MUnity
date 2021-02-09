@@ -19,9 +19,9 @@ public class MusicManager : MonoBehaviour
 
     public float interval = 2f;
     public float pressInterval = 0.2f;
-    
-    public float volumePressed = 0.5f;
-    public float durationPressed = 0.1f;
+
+    public float volumePressed = 1f;
+    public float durationPressed = 0.5f;
 
     private float muteVolume;
     private static string saveFolder;
@@ -115,7 +115,7 @@ public class MusicManager : MonoBehaviour
             CancelInvoke(nameof(DurationDown));
             firstPressed = true;
         }
-        
+
         if (Input.GetKey(KeyCode.Space))
         {
             if (firstPressed)
@@ -123,7 +123,7 @@ public class MusicManager : MonoBehaviour
             Invoke(nameof(Pause), pressInterval);
             firstPressed = false;
         }
-        
+
         if (Input.GetKeyUp(KeyCode.Space))
         {
             CancelInvoke(nameof(Pause));
@@ -169,7 +169,7 @@ public class MusicManager : MonoBehaviour
             audioManager.audioSource.time += durationAdded;
         else audioManager.audioSource.time = audioManager.audioSource.clip.length;
     }
-    
+
     private void DurationUp()
     {
         if (audioManager.audioSource.clip.length > audioManager.audioSource.time + durationPressed)
@@ -183,7 +183,7 @@ public class MusicManager : MonoBehaviour
             audioManager.audioSource.time -= durationSubtracted;
         else audioManager.audioSource.time = 0;
     }
-    
+
     private void DurationDown()
     {
         if (0 < audioManager.audioSource.time - durationPressed)
@@ -194,6 +194,7 @@ public class MusicManager : MonoBehaviour
     private void OnApplicationQuit()
     {
         Save();
+        audioManager.discordController.ClearActivity();
     }
 
     public void PlayQueued(AudioClip clip)
